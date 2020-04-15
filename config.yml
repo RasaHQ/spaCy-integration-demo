@@ -1,0 +1,18 @@
+language: en
+
+pipeline:
+- name: SpacyNLP
+  model: "spacy-trained-model"
+- name: SpacyTokenizer
+- name: SpacyEntityExtractor
+  dimensions: ["PROGLANG"]
+- name: CountVectorsFeaturizer
+  analyzer: char_wb
+  min_ngram: 1
+  max_ngram: 4
+- name: EmbeddingIntentClassifier
+
+policies:
+  - name: MemoizationPolicy
+  - name: KerasPolicy
+  - name: MappingPolicy

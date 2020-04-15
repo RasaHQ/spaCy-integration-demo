@@ -1,0 +1,18 @@
+actions:
+- action_proglang
+- utter_goodbye
+- utter_greet
+entities:
+- proglang
+intents:
+- talk_code
+- greet
+- goodbye
+responses:
+  utter_goodbye:
+  - text: Bye
+  utter_greet:
+  - text: Hey! How are you?
+session_config:
+  carry_over_slots_to_new_session: true
+  session_expiration_time: 60
