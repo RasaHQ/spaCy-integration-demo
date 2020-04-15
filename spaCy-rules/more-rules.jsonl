@@ -1,0 +1,5 @@
+{"label":"PYTHON","pattern":[{"LOWER":"python"}]}
+{"label":"PYTHON","pattern":[{"LOWER":{"REGEX":"(python\\d+\\.?\\d*.?\\d*)"}}]}
+{"label":"PYTHON","pattern":[{"LOWER":"python"}, {"TEXT":{"REGEX":"(\\d+\\.?\\d*.?\\d*)"}}]}
+{"label":"JS","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}]}
+{"label":"JS","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}, {"TEXT": {"REGEX": "(\\d+\\.?\\d*.?\\d*)"}}]}

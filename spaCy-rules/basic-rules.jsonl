@@ -1,0 +1,3 @@
+{"label":"PYTHON","pattern":[{"LOWER":"python"}]}
+{"label":"PYTHON","pattern":[{"LOWER":{"REGEX":"(python\\d+\\.?\\d*.?\\d*)"}}]}
+{"label":"PYTHON","pattern":[{"LOWER":"python"},{"TEXT":{"REGEX":"(\\d+\\.?\\d*.?\\d*)"}}]}

@@ -5,12 +5,16 @@ pipeline:
   model: "spacy-trained-model"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
-  dimensions: ["PROGLANG"]
+  dimensions: ["PYTHON", "JS"]
+- name: SpacyFeaturizer
+  pooling: mean
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
   max_ngram: 4
-- name: EmbeddingIntentClassifier
+- name: DIETClassifier
+  epochs: 10
+  entity_recognition: False
 
 policies:
   - name: MemoizationPolicy

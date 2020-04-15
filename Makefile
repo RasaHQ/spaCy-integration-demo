@@ -9,7 +9,7 @@ help:
 	@echo "-------------------------------------------------"
 
 install:
-	pip install rasa
+	pip install rasa spacy
 
 train:
 	rasa train
