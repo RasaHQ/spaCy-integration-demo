@@ -8,6 +8,12 @@ It is maintained by Vincent D. Warmerdam, Research Advocate as [Rasa](https://ra
 
 ## Start 
 
+To install everything simply run; 
+
+```
+make install
+```
+
 This repository demonstrates how you can attach a custom spaCy model to Rasa. We're
 keeping it simple by only having a NER model that uses a pattern matcher but it should
 demonstrate how to hook things up. 
