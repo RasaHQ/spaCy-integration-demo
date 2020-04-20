@@ -46,7 +46,7 @@ why spaCy is more commonly used as a featurizer.
 
 Here's an example of a configuration where we also grab the wordembeddings from spaCy so that we can pass it to the classifier. 
 
-```
+```yaml
 language: en
 
 pipeline:
