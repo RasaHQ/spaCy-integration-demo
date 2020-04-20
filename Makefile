@@ -10,6 +10,7 @@ help:
 
 install:
 	pip install rasa spacy
+	python -m spacy download en_core_web_sm
 
 train:
 	rasa train
