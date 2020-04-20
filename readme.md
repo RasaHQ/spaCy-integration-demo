@@ -33,11 +33,11 @@ You'll notice that the `config.yml` file has a reference to this
 model for entity detection. After training this spaCy will do entity 
 recognition for you.
 
-```
-rasa train
-rasa shell nlu
-> i want to talk about python 3.6 # [python 3.6] is now a PROGLANG
-> i code with node # [node] is now a PROGLANG
+```python
+> rasa train
+> rasa shell nlu
+"i want to talk about python 3.6" # [python 3.6] is now a PROGLANG
+"i code with node" # [node] is now a PROGLANG
 ```
 
 Note that we're not training the spaCy model here, we're merely using 
