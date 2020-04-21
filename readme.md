@@ -9,7 +9,12 @@ It is maintained by Vincent D. Warmerdam, Research Advocate as [Rasa](https://ra
 # spaCy & Rasa
 
 In this guide we're going to show you how you can get a custom spaCy model
-working inside of Rasa on your local machine. 
+working inside of Rasa on your local machine. The document does expect that 
+you're already familiar with spaCy and Rasa. If you're not, feel free to check out
+the [spaCy online course](https://course.spacy.io/en/) or spaCy [introductory youtube series](https://www.youtube.com/watch?v=WnGPv6HnBok). The getting started guide
+for Rasa can be found [here](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
+
+If you want to follow along you'll need to clone the repository over [here]
 
 ## Install
 
@@ -286,7 +291,7 @@ common entities such as people and places
 
 That said, you may not need it all the time. 
 
-The spaCy model can be great if you have a highly customized model
+The spaCy workflow can be great if you have a highly customized model
 and you'd like to get it into Rasa. But it may not be an ideal starting 
 point though since spaCy is a tool for general NLP tasks while the 
 tools that Rasa offers are in general more specalized for the digital 
@@ -294,4 +299,9 @@ assistant usecase.
 
 ## Play 
 
-Feel free to play around with this! Happy hacking!
+Feel free to play around with this! You can change the empty `English()` model
+in `mkmodel.py` with an pretrained one. For the english language `en_core_web_md` 
+is a populaor choice but there's even [multi-lingual models](https://spacy.io/models/xx) 
+to pick from. 
+
+Happy hacking!

@@ -137,4 +137,5 @@ after/
 .idea
 .vscode
 
-spacy-trained-model
+spaCy-basic-rules
+spaCy-more-rules
