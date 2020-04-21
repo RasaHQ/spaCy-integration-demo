@@ -2,15 +2,16 @@ language: en
 
 pipeline:
 - name: SpacyNLP
-  model: "en_core_web_sm"
+  model: "spacy-trained-model"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+  dimensions: ["GOLANG", "PYTHON", "JAVASCRIPT"]
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
-  max_ngram: 2
+  max_ngram: 4
 - name: DIETClassifier
-  epochs: 10
+  epochs: 1
 
 policies:
   - name: MemoizationPolicy

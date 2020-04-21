@@ -6,6 +6,11 @@ This repository contains an example of how to use spaCy models inside of Rasa.
 
 It is maintained by Vincent D. Warmerdam, Research Advocate as [Rasa](https://rasa.com/).
 
+# spaCy & Rasa
+
+In this guide we're going to show you how you can get a custom spaCy model
+working inside of Rasa on your local machine. 
+
 ## Install
 
 To install everything you need simply run; 
@@ -39,7 +44,7 @@ the `nlu.md` file;
 ## intent:talk_code
 - i want to talk about python- How do you do inline delegates in vb.net like python
 - Code to ask yes/no question in javascript
-- Executing JavaScriptfrom Flex: Is this javascriptfunction dangerous?
+- Executing JavaScript from Flex: Is this javascript function dangerous?
 - What does this python error mean? 
 ...
 ```
@@ -49,7 +54,7 @@ Note that this file only contains intents, we do not have any entities defined h
 So let's create a `config.yml` file that uses spaCy to detect
 entities. 
 
-```
+```yaml
 language: en
 
 pipeline:
@@ -57,6 +62,8 @@ pipeline:
   model: "en_core_web_sm"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+- name: SpacyFeaturizer
+  pooling: mean
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
@@ -79,6 +86,8 @@ sure that it is downloaded beforehand via `python -m spacy download en_core_web_
 2. Because we're using the spaCy model we now also have to use
 the tokenizer from spaCy. We do this is the second pipeline step. 
 3. In the third step we're telling spaCy to detect entities on our behalf.
+4. In the fourth step we're telling spaCy to also generate the word embeddings
+and the pass the mean of these to the next steps.
 4. In the next steps we generate some features using the `CountVectorsFeaturizer` that will be passed to the `DIETClassifier`. Since we're interested in showing the effect of the `SpacyEntityExtractor` we're only training the algorithm for 1 epoch.
 
 We can train this pipeline and talk to it to see what the effect is. 
@@ -197,71 +206,88 @@ this is on disk we can refer to it in our `config.yml`. So here's
 one that refers to the rules defined in `spaCy-rules/basic-rules.jsonl`.
 
 ```yaml
-language: en
-
 pipeline:
 - name: SpacyNLP
-  model: "spacy-trained-model"
+  model: "spaCy-basic-rules"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
-  dimensions: ["PROGLANG"]
-- name: SpacyFeaturizer
-  pooling: mean
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
   max_ngram: 4
-- name: EmbeddingIntentClassifier
+- name: DIETClassifier
+  epochs: 1
 ```
 
-You'll notice that the `config.yml` file has a reference to this 
-model for entity detection. After training this spaCy will do entity 
-recognition for you.
+We've made a few changes now. 
+
+1. You'll notice that the `config.yml` file has a reference to `spaCy-basic-rules`.
+This is equivalent to running `spacy.load("spaCy-basic-rules")` because the folder
+is on disk. Now this model will be used for entity detection.
+2. Since the spaCy model that we've made came from an empty `English()`
+model there won't be any word vectors attached. So we've removed the `SpacyFeaturizer`.
+
+With these changes you can rerun the same experiment and now detect programming
+languages in the text.
 
 ```python
-> rasa train
-> rasa shell nlu
-"i want to talk about python 3.6" # [python 3.6] is now a PROGLANG
-"i code with node"                # [node] is now a PROGLANG
+> rasa train; rasa shell nlu
+"i want to talk about python 3.6" # [python 3.6] is now a PROGLANG entity
+"i code with node"                # [node] is now a PROGLANG entity
 ```
 
-Note that we're not training the spaCy model here, we're merely using 
-it. All spaCy models must be trained before giving it to Rasa. This is
-why spaCy is more commonly used as a featurizer. 
-
-Here's an example of a configuration where we also grab the wordembeddings from spaCy so that we can pass it to the classifier. 
+Let's do this again but with the other spaCy model. 
 
 ```yaml
-language: en
-
 pipeline:
 - name: SpacyNLP
-  model: "spacy-trained-model"
+  model: "spaCy-more-rules"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
-  dimensions: ["PROGLANG"]
-- name: SpacyFeaturizer
-  pooling: mean
+  dimensions: ["GOLANG", "PYTHON", "JAVASCRIPT"]
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
   max_ngram: 4
-- name: EmbeddingIntentClassifier
+- name: DIETClassifier
+  epochs: 1
+```
+
+Here's the differences with the `config.yml` we had before. 
+
+1. We're now referring to the `spaCy-more-rules` model. This was the one
+with the matcher rules for for `GOLANG`, `SQL`, `PYTHON` and `JAVASCRIPT` entities. 
+2. The entity extractor now has extra settings in it. This configuration will not detect `SQL` but it will detect the other languages. 
+
+With this configuration, you should now be able to see new behavior.
+
+```python
+> rasa train; rasa shell nlu
+"i want to talk about python 3.6" # [python 3.6] is now a PYTHON entity
+"i code with node"                # [node] is now a JAVASCRIPT entity
+"this movies deserves a sql"      # no entity detected
+"i go for golang"                 # [golang] is now a GOLANG entity
 ```
 
 ## Usecase
 
-When might this be useful? There's a few instances; 
+We've only scratched the surface of what is possible with spaCy but hopefully
+this guide was able to show you how to you can connect a custom spaCy model to
+Rasa.
 
-- spaCy has support for multiple languages, so if your assistant needs to speak Dutch, you could use a pretrained spaCy model for that as well as the pretrained vectors 
+So you might wonder, when might this be useful? There's a few instances; 
+
+- spaCy has support for multiple languages, so if your assistant needs to speak Dutch, you could use a pretrained spaCy model for that.
 - spaCy has pretrained models that automatically have support for 
 common entities such as people and places 
-- spaCy has a large community of specialized pretrained models that you can download, say on legal texts
+- spaCy has a large community of specialized pretrained models that you can download, say on legal texts or academic research papers
 
 ## Not a Usecase 
 
+That said, you may not need it all the time. 
+
 The spaCy model can be great if you have a highly customized model
-and you'd like to get it into Rasa. It may not be an ideal starting 
+and you'd like to get it into Rasa. But it may not be an ideal starting 
 point though since spaCy is a tool for general NLP tasks while the 
 tools that Rasa offers are in general more specalized for the digital 
 assistant usecase. 
