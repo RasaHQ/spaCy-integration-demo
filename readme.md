@@ -14,13 +14,10 @@ you're already familiar with spaCy and Rasa. If you're not, feel free to check o
 the [spaCy online course](https://course.spacy.io/en/) or spaCy [introductory youtube series](https://www.youtube.com/watch?v=WnGPv6HnBok). The getting started guide
 for Rasa can be found [here](https://rasa.com/docs/rasa/user-guide/rasa-tutorial/).
 
-If you want to follow along you'll need to clone the repository over [here]
-
-## Install
-
-To install everything you need simply run; 
+If you want to follow along you'll need to clone the repository over [here](https://github.com/RasaHQ/spaCy-integration-demo) and install all the dependencies. 
 
 ```
+git clone https://github.com/RasaHQ/spaCy-integration-demo
 make install
 ```
 
