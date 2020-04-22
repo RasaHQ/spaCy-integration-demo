@@ -2,6 +2,8 @@
 
 # Demo of spaCy in Rasa
 
+**WILL CONTINUE ONCE [THIS](https://github.com/explosion/spaCy/issues/5338) BUG IS FIXED**
+
 This repository contains an example of how to use spaCy models inside of Rasa.
 
 It is maintained by Vincent D. Warmerdam, Research Advocate as [Rasa](https://rasa.com/).
