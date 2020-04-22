@@ -140,12 +140,13 @@ as well.
 
 We'll use two files that contain the rules.
 
-#### spaCy-rules/basic-rules.jsonl
+#### matcher-rules/proglang.jsonl
 
 This file contains rules that maps patterns to a single entity. 
 
 ```json
 {"label":"PROGLANG","pattern":[{"LOWER":"golang"}]}
+{"label":"PROGLANG","pattern":[{"LOWER":"go", "POS": {"NOT_IN": "VERB"}}]}
 {"label":"PROGLANG","pattern":[{"LOWER":"sql"}]}
 {"label":"PROGLANG","pattern":[{"LOWER":"python"}]}
 {"label":"PROGLANG","pattern":[{"LOWER":{"REGEX":"(python\\d+\\.?\\d*.?\\d*)"}}]}
@@ -154,23 +155,14 @@ This file contains rules that maps patterns to a single entity.
 {"label":"PROGLANG","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}, {"TEXT": {"REGEX": "(\\d+\\.?\\d*.?\\d*)"}}]}
 ```
 
-#### spaCy-rules/basic-rules.jsonl
-
-This file contains rules that maps patterns to a multiple entities.
-
-```json
-{"label":"GOLANG","pattern":[{"LOWER":"golang"}]}
-{"label":"SQL","pattern":[{"LOWER":"sql"}]}
-{"label":"PYTHON","pattern":[{"LOWER":"python"}]}
-{"label":"PYTHON","pattern":[{"LOWER":{"REGEX":"(python\\d+\\.?\\d*.?\\d*)"}}]}
-{"label":"PYTHON","pattern":[{"LOWER":"python"}, {"TEXT":{"REGEX":"(\\d+\\.?\\d*.?\\d*)"}}]}
-{"label":"JS","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}]}
-{"label":"JS","pattern":[{"LOWER": {"IN": ["node", "nodejs", "js", "javascript"]}}, {"TEXT": {"REGEX": "(\\d+\\.?\\d*.?\\d*)"}}]}
-```
+Most of the patterns that we're detecting here are based on regex. But the nice 
+thing about spaCy matching rules is that we can also use part of speech in these
+patterns. That allows us to detect "go" as a programming language, but only if
+"go" is not used as a verb. 
 
 ## Towards a Model 
 
-To generate the spaCy models using these files locally you can run a script (`mkmodel.py`) that contains the following content;
+To generate the spaCy model using these files locally you can run a script (`mkmodel.py`) that contains the following content;
 
 ```python
 import pathlib
@@ -181,38 +173,49 @@ from spacy.pipeline import EntityRuler
 
 
 if __name__ == "__main__":
-    for path in pathlib.Path('spaCy-rules').glob("*.jsonl"):
-        # note that we could have also used `en_core_web_sm` as a starting point
-        # or another pretrained language model, like Dutch `nl_core_news_sm`
-        # we're keeping it lightweight for now though
-        nlp = English()
+    path = pathlib.Path('matcher-rules/proglang.jsonl')
+    # note that we could have also used `English()` as a starting point
+    # if our matching rules weren't using part of speech 
+    nlp = spacy.load("en_core_web_sm")
 
-        # create a new rule based NER detector loading in settings from disk
-        ruler = EntityRuler(nlp).from_disk(path)
-        print(f"Will now create model for {path}.")
+    # create a new rule based NER detector loading in settings from disk
+    ruler = EntityRuler(nlp).from_disk(path)
+    print(f"Will now create model for {path}.")
 
-        # add the detector to the model
-        nlp.add_pipe(ruler, name="proglang-detector")
+    # add the detector to the model
+    nlp.add_pipe(ruler, name="proglang-detector")
 
-        # save the model to disk, this is now also the model name
-        # you could load it now via `spacy.load("spacy-trained-model")`
-        folder = f"spaCy-{str(path.parts[-1]).replace('.jsonl', '')}"
-        nlp.to_disk(folder)
-        print(f"spaCy model saved in `{folder}` folder")
+    # save the model to disk
+    nlp.to_disk("spaCy-custom-model")
+    print(f"spaCy model saved.")
 ```
 
 This script will look in the `spaCy-rules` folder and it 
 will pick up `.jsonl` files that contain rules for the `EntityRuler`.
-Once loaded it will construct a spaCy model and save it to disk. Once
-this is on disk we can refer to it in our `config.yml`. So here's 
-one that refers to the rules defined in `spaCy-rules/basic-rules.jsonl`.
+Once loaded it will construct a spaCy model and save it to disk. After 
+saving it to disk, it is a good habbit to make a proper package out 
+of it so that your virtualenv is aware. You can do both steps via; 
+
+```
+> python mkmodel.py
+Will now create model for matcher-rules/proglang.jsonl.
+spaCy model saved over at custom-proglang-model.
+> python -m spacy link custom-proglang-model proglang-model --force
+✔ Linking successful
+You can now load the model via spacy.load('proglang-model')
+```
+
+Once this is on disk we can refer to it in our `config.yml`. So here's 
+one that refers to the `proglang-model` link we just made.
 
 ```yaml
 pipeline:
 - name: SpacyNLP
-  model: "spaCy-basic-rules"
+  model: "custom-proglang-model"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+- name: SpacyFeaturizer
+  pooling: mean
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
@@ -221,32 +224,35 @@ pipeline:
   epochs: 1
 ```
 
-We've made a few changes now. 
-
-1. You'll notice that the `config.yml` file has a reference to `spaCy-basic-rules`.
-This is equivalent to running `spacy.load("spaCy-basic-rules")` because the folder
-is on disk. Now this model will be used for entity detection.
-2. Since the spaCy model that we've made came from an empty `English()`
-model there won't be any word vectors attached. So we've removed the `SpacyFeaturizer`.
+You'll notice that the `config.yml` file has a reference to `proglang-model`.
+This is equivalent to running `spacy.load("proglang-model")` and spaCy has made
+a link that ensures it is grabbing the right folder on disk. Now this model will be used for entity detection.
 
 With these changes you can rerun the same experiment and now detect programming
 languages in the text.
 
 ```python
 > rasa train; rasa shell nlu
+"i program using go"              # [go] is now a PROGLANG entity
 "i want to talk about python 3.6" # [python 3.6] is now a PROGLANG entity
 "i code with node"                # [node] is now a PROGLANG entity
+"i live in Amsterdam"             # [Amsterdam] is now GPE entity
 ```
 
-Let's do this again but with the other spaCy model. 
+This works but maybe we'd like to limit the entities here, maybe we're only
+interested in the entities that refer to programming languages. We can either
+change the spaCy model (which would make it faster) but you can also turn 
+an entity off from `config.yml`. 
 
 ```yaml
 pipeline:
 - name: SpacyNLP
-  model: "spaCy-more-rules"
+  model: "proglang-detector"
 - name: SpacyTokenizer
+- name: SpacyFeaturizer
+  pooling: mean
 - name: SpacyEntityExtractor
-  dimensions: ["GOLANG", "PYTHON", "JAVASCRIPT"]
+  dimensions: ["PROGLANG"]
 - name: CountVectorsFeaturizer
   analyzer: char_wb
   min_ngram: 1
@@ -255,20 +261,18 @@ pipeline:
   epochs: 1
 ```
 
-Here's the differences with the `config.yml` we had before. 
+We've added a `dimensions` property to `SpacyEntityExtractor` which will 
+ensure that we only get entities that we ask for. 
 
-1. We're now referring to the `spaCy-more-rules` model. This was the one
-with the matcher rules for for `GOLANG`, `SQL`, `PYTHON` and `JAVASCRIPT` entities. 
-2. The entity extractor now has extra settings in it. This configuration will not detect `SQL` but it will detect the other languages. 
 
 With this configuration, you should now be able to see new behavior.
 
 ```python
 > rasa train; rasa shell nlu
+"i program using go"              # [go] is now a PROGLANG entity
 "i want to talk about python 3.6" # [python 3.6] is now a PYTHON entity
 "i code with node"                # [node] is now a JAVASCRIPT entity
-"this movies deserves a sql"      # no entity detected
-"i go for golang"                 # [golang] is now a GOLANG entity
+"i live in amsterdam"             # no entity detected
 ```
 
 ## Usecase
@@ -279,9 +283,14 @@ Rasa.
 
 So you might wonder, when might this be useful? There's a few instances; 
 
-- spaCy has support for multiple languages, so if your assistant needs to speak Dutch, you could use a pretrained spaCy model for that.
+- spaCy has an awesome suite of tools to detect entities and it may just be
+that your usecase fits their toolchain really well (like the pattern match
+for `go`, when it is not a verb it may be a programming language)
+- spaCy has support for multiple languages too, so if your assistant needs to speak Dutch, you could use a pretrained spaCy model for that while still using 
+the other tools.
 - spaCy has pretrained models that automatically have support for 
-common entities such as people and places 
+common entities such as people and places, meaning you don't need to train 
+your own
 - spaCy has a large community of specialized pretrained models that you can download, say on legal texts or academic research papers
 
 ## Not a Usecase 
@@ -296,9 +305,8 @@ assistant usecase.
 
 ## Play 
 
-Feel free to play around with this! You can change the empty `English()` model
-in `mkmodel.py` with an pretrained one. For the english language `en_core_web_md` 
-is a populaor choice but there's even [multi-lingual models](https://spacy.io/models/xx) 
-to pick from. 
+Feel free to play around with this! You can change the empty starting model
+in `mkmodel.py` with a beefy pretrained. For the english language `en_core_web_lg` 
+is a populaor choice but there's even [multi-lingual models](https://spacy.io/models/xx) to pick from. 
 
 Happy hacking!
