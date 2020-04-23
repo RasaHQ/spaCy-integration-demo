@@ -92,9 +92,9 @@ the tokenizer from spaCy. We do this is the second pipeline step.
 3. In the third step we're telling spaCy to detect entities on our behalf.
 4. In the fourth step we're telling spaCy to also generate the word embeddings
 and the pass the mean of these to the next steps.
-4. In the next steps we generate some features using the `CountVectorsFeaturizer` that will be passed to the `DIETClassifier`. Since we're interested in showing the effect of the `SpacyEntityExtractor` we're only training the algorithm for 1 epoch.
+5. In the next steps we generate some features using the `CountVectorsFeaturizer` that will be passed to the `DIETClassifier`. Since we're interested in showing the effect of the `SpacyEntityExtractor` we're only training the algorithm for 1 epoch.
 
-We can train this pipeline and talk to it to see what the effect is. 
+We can train this pipeline and talk to it to see what the effect is. Let's say `Hi I am Vincent from Amsterdam` to this assistant.
 
 ```
 > rasa train
@@ -128,7 +128,7 @@ When you run this, you'll notice in the output that both `Vincent` and `Amsterda
 ```
 
 The standard `en_core_web_sm` spaCy model supports some basic 
-entities right out of the box. These both people (`PERSON`) as well as
+entities right out of the box. These include people (`PERSON`) as well as
 countries, cities and states (`GPE`). Note that the spaCy model
 did not get trained by our `rasa train` command. As far as Rasa is 
 concerned spaCy is treated as a pretrained model.
@@ -185,11 +185,13 @@ if __name__ == "__main__":
     print(f"Will now create model for {path}.")
 
     # add the detector to the model
-    nlp.add_pipe(ruler, name="proglang-detector")
+    nlp.add_pipe(ruler, name="proglang")
 
+    # define the name of the model as a package
+    nlp.meta["name"] = "proglang"
     # save the model to disk
-    nlp.to_disk("spaCy-custom-model")
-    print(f"spaCy model saved.")
+    nlp.to_disk(nlp.meta["name"])
+    print(f"spaCy model saved over at {nlp.meta['name']}.")
 ```
 
 This script will look in the `spaCy-rules` folder and it 
@@ -201,19 +203,149 @@ of it so that your virtualenv is aware. You can do both steps via;
 ```
 > python mkmodel.py
 Will now create model for matcher-rules/proglang.jsonl.
-spaCy model saved over at custom-proglang-model.
-> python -m spacy link custom-proglang-model proglang-model --force
-✔ Linking successful
-You can now load the model via spacy.load('proglang-model')
+spaCy model saved over at proglang.
 ```
 
-Once this is on disk we can refer to it in our `config.yml`. So here's 
-one that refers to the `proglang-model` link we just made.
+## Model as a Package
+
+We now have a saved spaCy model on disk. We could already load it 
+with spaCy by calling `spacy.load("proglang")` and that means that 
+we could also refer to it in out `config.yml`. For local use this 
+is fine but for production use-case it would be nicer to properly 
+package the spaCy model. Let's run the commands for that. 
+
+```bash
+> python -m spacy package proglang . --force
+✔ Loaded meta.json from file
+proglang/meta.json
+✔ Successfully created package 'en_proglang-2.2.5'
+en_proglang-2.2.5
+```
+
+This command creates a python package folder structure. 
+
+<details>
+  <summary><b>See folder structure.</b></summary>
+<code><pre>
+en_proglang-2.2.5
+├── MANIFEST.in
+├── en_proglang
+│   ├── __init__.py
+│   └── en_proglang-2.2.5
+│       ├── meta.json
+│       ├── ner
+│       │   ├── cfg
+│       │   ├── model
+│       │   └── moves
+│       ├── parser
+│       │   ├── cfg
+│       │   ├── model
+│       │   └── moves
+│       ├── proglang
+│       │   ├── cfg
+│       │   └── patterns.jsonl
+│       ├── tagger
+│       │   ├── cfg
+│       │   ├── model
+│       │   └── tag_map
+│       ├── tokenizer
+│       └── vocab
+│           ├── key2row
+│           ├── lexemes.bin
+│           ├── lookups.bin
+│           ├── strings.json
+│           └── vectors
+├── meta.json
+└── setup.py
+
+7 directories, 22 files
+</pre></code>
+</details>
+
+We can tell python to create a tar file that we can pip install. 
+
+```
+> cd en_proglang-2.2.5
+> python setup.py sdist 
+> cd .. 
+```
+
+The `en_proglang-2.2.5` now has different contents. 
+
+<details>
+  <summary><b>See new folder structure.</b></summary>
+<code><pre>
+en_proglang-2.2.5
+├── MANIFEST.in
+├── dist
+│   └── en_proglang-2.2.5.tar.gz
+├── en_proglang
+│   ├── __init__.py
+│   ├── en_proglang-2.2.5
+│   │   ├── meta.json
+│   │   ├── ner
+│   │   │   ├── cfg
+│   │   │   ├── model
+│   │   │   └── moves
+│   │   ├── parser
+│   │   │   ├── cfg
+│   │   │   ├── model
+│   │   │   └── moves
+│   │   ├── proglang
+│   │   │   ├── cfg
+│   │   │   └── patterns.jsonl
+│   │   ├── tagger
+│   │   │   ├── cfg
+│   │   │   ├── model
+│   │   │   └── tag_map
+│   │   ├── tokenizer
+│   │   └── vocab
+│   │       ├── key2row
+│   │       ├── lexemes.bin
+│   │       ├── lookups.bin
+│   │       ├── strings.json
+│   │       └── vectors
+│   └── meta.json
+├── en_proglang.egg-info
+│   ├── PKG-INFO
+│   ├── SOURCES.txt
+│   ├── dependency_links.txt
+│   ├── not-zip-safe
+│   ├── requires.txt
+│   └── top_level.txt
+├── meta.json
+└── setup.py
+
+9 directories, 30 files
+</pre></code>
+</details>
+
+But we can now safely install the model as a package.
+
+```
+> python -m pip install en_proglang-2.2.5/dist/en_proglang-2.2.5.tar.gz
+```
+
+By doing this we can now load the model in two ways from python. 
+
+```
+> python 
+>>> import spacy 
+>>> spacy.load("en_proglang")
+<spacy.lang.en.English object at 0x119d0b080>
+>>> import en_proglang
+>>> en_proglang.load()
+<spacy.lang.en.English object at 0x119d593c8>
+```
+
+## Configure 
+
+Now that this is packaged up we can refer to it in our `config.yml`. So here's one that refers to the `en_proglang` link we just made.
 
 ```yaml
 pipeline:
 - name: SpacyNLP
-  model: "custom-proglang-model"
+  model: "en_proglang"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
 - name: SpacyFeaturizer
@@ -226,30 +358,37 @@ pipeline:
   epochs: 1
 ```
 
-You'll notice that the `config.yml` file has a reference to `proglang-model`.
-This is equivalent to running `spacy.load("proglang-model")` and spaCy has made
-a link that ensures it is grabbing the right folder on disk. Now this model will be used for entity detection.
+You'll notice that the `config.yml` file has a reference to `en_proglang`.
+This is equivalent to running `spacy.load("en_proglang")` and because it is a package we don't need to worry about filepaths. Now this model will be used for entity detection.
 
-With these changes you can rerun the same experiment and now detect programming
-languages in the text.
+With these changes you can rerun the same experiment and now detect programming languages in the text.
 
 ```python
 > rasa train; rasa shell nlu
 "i program using go"              # [go] is now a PROGLANG entity
 "i want to talk about python 3.6" # [python 3.6] is now a PROGLANG entity
 "i code with node"                # [node] is now a PROGLANG entity
-"i live in Amsterdam"             # [Amsterdam] is now GPE entity
+"i live in Amsterdam"             # [Amsterdam] is now a GPE entity
+"i program with python and go"    # [python"] is now ORG, go is PROGLANG
 ```
 
-This works but maybe we'd like to limit the entities here, maybe we're only
-interested in the entities that refer to programming languages. We can either
-change the spaCy model (which would make it faster) but you can also turn 
-an entity off from `config.yml`. 
+This works but maybe we'd like to limit the entities here. We're only
+interested in the entities that refer to programming languages and currently
+the base model in spaCy is detecting it as an organisation. There's a few 
+options here; 
+
+1. we can change the spaCy model and turn off the native models, this would
+also make the pipeline faster 
+2. we can change the spaCy model and have it use a better (but heavier) english
+model like `en_core_web_lg` as a starting point
+3. we can also just turn off the base entities from from `config.yml`
+
+Let's do the latter option.
 
 ```yaml
 pipeline:
 - name: SpacyNLP
-  model: "proglang-detector"
+  model: "en_proglang"
 - name: SpacyTokenizer
 - name: SpacyFeaturizer
   pooling: mean
@@ -274,7 +413,8 @@ With this configuration, you should now be able to see new behavior.
 "i program using go"              # [go] is now a PROGLANG entity
 "i want to talk about python 3.6" # [python 3.6] is now a PYTHON entity
 "i code with node"                # [node] is now a JAVASCRIPT entity
-"i live in amsterdam"             # no entity detected
+"i live in Amsterdam"             # no entity detected
+"i program with python and go"    # [python] is now ORG, go is PROGLANG
 ```
 
 ## Usecase

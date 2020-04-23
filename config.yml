@@ -2,9 +2,10 @@ language: en
 
 pipeline:
 - name: SpacyNLP
-  model: "custom-proglang-model"
+  model: "en_proglang"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+  dimensions: ["PROGLANG"]
 - name: SpacyFeaturizer
   pooling: mean
 - name: CountVectorsFeaturizer

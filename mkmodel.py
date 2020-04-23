@@ -16,9 +16,9 @@ if __name__ == "__main__":
     print(f"Will now create model for {path}.")
 
     # add the detector to the model
-    nlp.add_pipe(ruler, name="proglang-detector")
+    nlp.add_pipe(ruler, name="proglang")
 
     # save the model to disk
-    nlp.meta["name"] = "proglang-model"
+    nlp.meta["name"] = "proglang"
     nlp.to_disk(nlp.meta["name"])
     print(f"spaCy model saved over at {nlp.meta['name']}.")
