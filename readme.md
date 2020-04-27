@@ -2,8 +2,6 @@
 
 # Demo of spaCy in Rasa
 
-**WILL CONTINUE ONCE [THIS](https://github.com/explosion/spaCy/issues/5338) BUG IS FIXED**
-
 This repository contains an example of how to use spaCy models inside of Rasa.
 
 It is maintained by Vincent D. Warmerdam, Research Advocate as [Rasa](https://rasa.com/).
@@ -369,7 +367,6 @@ With these changes you can rerun the same experiment and now detect programming 
 "i want to talk about python 3.6" # [python 3.6] is now a PROGLANG entity
 "i code with node"                # [node] is now a PROGLANG entity
 "i live in Amsterdam"             # [Amsterdam] is now a GPE entity
-"i program with python and go"    # [python"] is now ORG, go is PROGLANG
 ```
 
 This works but maybe we'd like to limit the entities here. We're only
@@ -414,7 +411,6 @@ With this configuration, you should now be able to see new behavior.
 "i want to talk about python 3.6" # [python 3.6] is now a PYTHON entity
 "i code with node"                # [node] is now a JAVASCRIPT entity
 "i live in Amsterdam"             # no entity detected
-"i program with python and go"    # [python] is now ORG, go is PROGLANG
 ```
 
 ## Usecase
