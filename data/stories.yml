@@ -1,0 +1,18 @@
+version: "3.1"
+stories:
+- story: just code
+  steps:
+  - intent: talk_code
+  - action: action_proglang
+- story: say goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye
+- story: interactive_story
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: talk_code
+    entities:
+    - proglang: python
+  - action: action_proglang

@@ -136,6 +136,12 @@ before/
 after/
 .idea
 .vscode
+.rasa/
+.history/
+*.db
 
+# spaCy
+proglang/
+en_proglang*/
 spaCy-basic-rules
 spaCy-more-rules

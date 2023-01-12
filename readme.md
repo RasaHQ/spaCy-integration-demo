@@ -64,6 +64,7 @@ pipeline:
   model: "en_core_web_sm"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+  dimensions: ["PERSON", "GPE"]
 - name: SpacyFeaturizer
   pooling: mean
 - name: CountVectorsFeaturizer
@@ -192,7 +193,7 @@ if __name__ == "__main__":
     print(f"spaCy model saved over at {nlp.meta['name']}.")
 ```
 
-This script will look in the `spaCy-rules` folder and it 
+This script will look in the `matcher-rules` folder and it 
 will pick up `.jsonl` files that contain rules for the `EntityRuler`.
 Once loaded it will construct a spaCy model and save it to disk. After 
 saving it to disk, it is a good habbit to make a proper package out 
@@ -216,8 +217,8 @@ package the spaCy model. Let's run the commands for that.
 > python -m spacy package proglang . --force
 ✔ Loaded meta.json from file
 proglang/meta.json
-✔ Successfully created package 'en_proglang-2.2.5'
-en_proglang-2.2.5
+✔ Successfully created package 'en_proglang-3.4.1'
+en_proglang-3.4.1
 ```
 
 This command creates a python package folder structure. 
@@ -225,11 +226,11 @@ This command creates a python package folder structure.
 <details>
   <summary><b>See folder structure.</b></summary>
 <code><pre>
-en_proglang-2.2.5
+en_proglang-3.4.1
 ├── MANIFEST.in
 ├── en_proglang
 │   ├── __init__.py
-│   └── en_proglang-2.2.5
+│   └── en_proglang-3.4.1
 │       ├── meta.json
 │       ├── ner
 │       │   ├── cfg
@@ -263,23 +264,23 @@ en_proglang-2.2.5
 We can tell python to create a tar file that we can pip install. 
 
 ```
-> cd en_proglang-2.2.5
+> cd en_proglang-3.4.1
 > python setup.py sdist 
 > cd .. 
 ```
 
-The `en_proglang-2.2.5` now has different contents. 
+The `en_proglang-3.4.1` now has different contents. 
 
 <details>
   <summary><b>See new folder structure.</b></summary>
 <code><pre>
-en_proglang-2.2.5
+en_proglang-3.4.1
 ├── MANIFEST.in
 ├── dist
-│   └── en_proglang-2.2.5.tar.gz
+│   └── en_proglang-3.4.1.tar.gz
 ├── en_proglang
 │   ├── __init__.py
-│   ├── en_proglang-2.2.5
+│   ├── en_proglang-3.4.1
 │   │   ├── meta.json
 │   │   ├── ner
 │   │   │   ├── cfg
@@ -321,7 +322,7 @@ en_proglang-2.2.5
 But we can now safely install the model as a package.
 
 ```
-> python -m pip install en_proglang-2.2.5/dist/en_proglang-2.2.5.tar.gz
+> python -m pip install en_proglang-3.4.1/dist/en_proglang-3.4.1.tar.gz
 ```
 
 By doing this we can now load the model in two ways from python. 
@@ -346,6 +347,7 @@ pipeline:
   model: "en_proglang"
 - name: SpacyTokenizer
 - name: SpacyEntityExtractor
+  dimensions: ["PERSON", "GPE", "PROGLANG"]
 - name: SpacyFeaturizer
   pooling: mean
 - name: CountVectorsFeaturizer
