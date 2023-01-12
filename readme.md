@@ -25,29 +25,36 @@ make install
 
 This repository represents a simple assistant that only
 needs to understand four intents. These are described in 
-the `nlu.md` file; 
+the `nlu.yml` file; 
 
-```md
-## intent:greet
-- hey
-- hello
+```yml
+version: "3.1"
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
 ...
 
 ## intent:goodbye
-- bye
-- goodbye
+- intent: goodbye
+  examples: |
+    - bye
+    - goodbye
 ...
 
 ## intent:bot_challenge
-- are you a bot?
-- are you a human?
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
 ...
 
 ## intent:talk_code
-- i want to talk about python- How do you do inline delegates in vb.net like python
-- Code to ask yes/no question in javascript
-- Executing JavaScript from Flex: Is this javascript function dangerous?
-- What does this python error mean? 
+- intent: talk_code
+  examples: |
+    - i want to talk about python- How do you do inline delegates in vb.net like python
+    - Code to ask yes/no question in javascript
 ...
 ```
 
