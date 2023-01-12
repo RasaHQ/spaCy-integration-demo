@@ -1,0 +1,45 @@
+version: "3.1"
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - good morning
+    - good evening
+    - hey there
+- intent: goodbye
+  examples: |
+    - bye
+    - goodbye
+    - see you around
+    - see you later
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+- intent: talk_code
+  examples: |
+    - i want to talk about python- How do you do inline delegates in vb.net like python
+    - Code to ask yes/no question in javascript
+    - Executing JavaScriptfrom Flex: Is this javascriptfunction dangerous?
+    - What does this python error mean?
+    - javascriptlocalsimplement shortcut key combination of CTRL or SHIFT + letter through javascript- How can I create a Netflix-style iframe overlay without a huge javascriptlibrary?
+    - How can I share a variable value between classic asp, .NET and javascript- Detect via javascriptwhether Silverlight is installed
+    - jQuery override form submit not working when submit called by javascripton a element
+    - Why Stackoverflow binds user actions dynamically with javascript- Relocate JSF-generated javascript- Adding click event to button to fire javascriptthrough VB.NET
+    - What is the javascriptMIME type for the type attribute of a script tag?
+    - Are there caveats to dynamicly creating a form with javascript- How do I share a javascriptobject between different pages in Adobe AIR?
+    - Auto start print html page using javascript- How can I delete my browser cookies using javascript- WCF javascriptproxy not found when endpoint address is not blank
+    - reference path re javascriptintellisense
+    - How do I pre-cache images for quick viewing with javascript- How do I look over a javascriptarray without using indexes in YUI?
+    - MVC and jQuery validation, where to 'weave' the javascriptand how to embed into master page?
+    - list of email addresses that can be used to test a javascriptvalidation script
+    - How to resolve a .lnk in c#
+    - Creating local users on remote windows server using c#
+    - Forcibly rollback an installer in c# setup projects
+    - bring a console window to front in c#
+    - Passing input to a state machine )
+    - what's the quickest way to extract a 5 digit number from a string in c#
